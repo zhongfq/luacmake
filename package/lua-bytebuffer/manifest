@@ -1,0 +1,4 @@
+return {
+    target = "bytebuffer",
+    git = "git@github.com:luacmake/lua-bytebuffer.git",
+}

@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+WORK_DIR=`realpath $0`
+WORK_DIR=`dirname ${WORK_DIR}`
+cd ${WORK_DIR} && lua luacmake.lua $@
