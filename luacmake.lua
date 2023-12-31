@@ -128,6 +128,10 @@ CMakeLists:pushf([[
     cmake_minimum_required(VERSION 3.25)
 
     project(luacmake)
+
+    if(APPLE)
+        set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64")
+    endif()
 ]])
 CMakeLists:push("")
 CMakeLists:pushf([[
@@ -147,11 +151,13 @@ CMakeLists:pushf([[
         ${luacmake_build_targets}
       DESTINATION
         ${luacmake_output}
+      COMPONENT
+        luacmake
     )
 ]])
 olua.write("${work_dir}/cache/CMakeLists.txt", tostring(CMakeLists))
 olua.exec([[
     cmake -B build -S cache -DCMAKE_BUILD_TYPE=Release
     cmake --build build --target ${luacmake_build_targets}
-    cmake --install build
+    cmake --install build --component luacmake
 ]])
