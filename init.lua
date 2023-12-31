@@ -7,6 +7,10 @@ end
 olua.os = package.cpath:find('?.dll') and 'windows' or
     ((io.popen('uname'):read("*l"):find('Darwin')) and 'macos' or 'linux')
 
+function olua.is_windows()
+    return olua.os == "windows"
+end
+
 local _ipairs = ipairs
 function ipairs(t)
     local mt = getmetatable(t)

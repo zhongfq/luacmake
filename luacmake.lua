@@ -89,6 +89,9 @@ local luacmake_build_packages = olua.newarray("\n")
 for _, target in ipairs(luacmake_packages) do
     if target == "lua" then
         luacmake_build_targets:push("lua luac")
+        if olua.is_windows() then
+            luacmake_build_targets:push("liblua")
+        end
     elseif target ~= "olua" then
         local package_name = olua.format("lua-${target}")
         local package_git_dir = olua.format("${work_dir}/cache/${package_name}")
@@ -156,8 +159,11 @@ CMakeLists:pushf([[
     )
 ]])
 olua.write("${work_dir}/cache/CMakeLists.txt", tostring(CMakeLists))
-olua.exec([[
-    cmake -B build -S cache -DCMAKE_BUILD_TYPE=Release
-    cmake --build build --target ${luacmake_build_targets}
-    cmake --install build --component luacmake
-]])
+if olua.is_windows() then
+    olua.exec("cmake -B build -S cache -A win32")
+    olua.exec("cmake --build build --target ${luacmake_build_targets} --config Release")
+else
+    olua.exec("cmake -B build -S cache -DCMAKE_BUILD_TYPE=Release")
+    olua.exec("cmake --build build --target ${luacmake_build_targets}")
+end
+olua.exec("cmake --install build --component luacmake")
