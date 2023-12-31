@@ -1,14 +1,6 @@
 cmake_minimum_required(VERSION 3.25)
 
-project(lua-xlsx)
-
 set(CMAKE_CXX_STANDARD 11)
-
-set(BUILD_SHARED_LIBS OFF)
-
-if(APPLE)
-    set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64")
-endif()
 
 # -----------------------------------------------------------------------------
 # ------------------------------------ lxp ------------------------------------
@@ -181,11 +173,7 @@ set(libzzip_INCS
 
 
 add_library(libzzip ${LIBZZIP_SRCS})
-if(WIN32)
-    target_link_libraries(libzzip zlibstatic)
-else()
-    target_link_libraries(libzzip zlib)
-endif()
+target_link_libraries(libzzip zlibstatic)
 target_include_directories(libzzip
   PUBLIC
     ${CMAKE_CURRENT_BINARY_DIR}
@@ -209,20 +197,26 @@ target_include_directories(zip PUBLIC ${LUA_INCLUDE_DIR})
 # -----------------------------------------------------------------------------
 # ------------------------------------ xlsx -----------------------------------
 # -----------------------------------------------------------------------------
-set(XLSX_SRC
+set(LUACMAKE_TARGET xlsx)
+set(LUACMAKE_SOURCES
    ${LUACMAKE_SOURCE_DIR}/lua-xlsx.cpp
 )
-add_library(xlsx MODULE ${XLSX_SRC})
-target_link_libraries(xlsx zip lxp olua)
-set_target_properties(xlsx PROPERTIES PREFIX "")
-target_include_directories(xlsx
+add_library(${LUACMAKE_TARGET} MODULE ${LUACMAKE_SOURCES})
+target_link_libraries(${LUACMAKE_TARGET} zip lxp olua)
+set_target_properties(${LUACMAKE_TARGET} PROPERTIES PREFIX "")
+target_include_directories(${LUACMAKE_TARGET}
   PUBLIC
     ${LUA_INCLUDE_DIR}
     ${LUACMAKE_SOURCE_DIR}/luaexpat/src
     ${LUACMAKE_SOURCE_DIR}/luazip/src
 )
 if(APPLE)
-    target_link_options(xlsx PUBLIC -bundle -undefined dynamic_lookup)
+    target_link_options(${LUACMAKE_TARGET} PUBLIC -bundle -undefined dynamic_lookup)
 elseif(WIN32)
-    target_link_libraries(xlsx liblua)
+    target_link_libraries(${LUACMAKE_TARGET} liblua)
+    target_compile_definitions(${LUACMAKE_TARGET}
+      PRIVATE
+        LUA_BUILD_AS_DLL
+        LUA_LIB
+    )
 endif()

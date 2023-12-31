@@ -1,19 +1,24 @@
 cmake_minimum_required(VERSION 3.25)
 
-project(lua-lfs)
+set(LUACMAKE_TARGET lfs)
 
-set(LFS_SRC
+set(LUACMAKE_SOURCES
     ${LUACMAKE_SOURCE_DIR}/src/lfs.c
     ${LUACMAKE_SOURCE_DIR}/src/lfs.h
     ${LUACMAKE_SOURCE_DIR}/src/lfs.def
 )
 
-add_library(lfs MODULE ${LFS_SRC})
-set_target_properties(lfs PROPERTIES PREFIX "")
-target_include_directories(lfs PUBLIC ${LUA_INCLUDE_DIR})
+add_library(${LUACMAKE_TARGET} MODULE ${LUACMAKE_SOURCES})
+set_target_properties(${LUACMAKE_TARGET} PROPERTIES PREFIX "")
+target_include_directories(${LUACMAKE_TARGET} PUBLIC ${LUA_INCLUDE_DIR})
 
 if(APPLE)
-    target_link_options(lfs PUBLIC -bundle -undefined dynamic_lookup)
+    target_link_options(${LUACMAKE_TARGET} PUBLIC -bundle -undefined dynamic_lookup)
 elseif(WIN32)
-    target_link_libraries(lfs liblua)
+    target_link_libraries(${LUACMAKE_TARGET} liblua)
+    target_compile_definitions(${LUACMAKE_TARGET}
+      PRIVATE
+        LUA_BUILD_AS_DLL
+        LUA_LIB
+    )
 endif()

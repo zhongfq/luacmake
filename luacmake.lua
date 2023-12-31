@@ -51,6 +51,7 @@ while #args > 0 do
         luacmake_command = c
         olua.rmdir("${work_dir}/build")
         olua.rmdir("${work_dir}/cache")
+        olua.rmdir("${work_dir}/output")
         return
     elseif not string.find(c, "^[%-]") and luacmake_command == "install" then
         luacmake_packages[#luacmake_packages + 1] = c
@@ -78,92 +79,107 @@ olua.exec("git submodule init")
 olua.exec("git submodule update")
 
 -------------------------------------------------------------------------------
--- checkout library project
+-- checkout and build targets
 -------------------------------------------------------------------------------
 olua.rmdir("${work_dir}/build")
 olua.mkdir("${work_dir}/cache")
 
-local luacmake_build_targets = olua.newarray(" ")
-local luacmake_build_packages = olua.newarray("\n")
+local luacmake_install_targets = olua.newarray("\n")
 
 for _, target in ipairs(luacmake_packages) do
+    local package_name, package_git_dir, package_manifest, build_dir, source_dir
     if target == "lua" then
-        luacmake_build_targets:push("lua luac")
-        if olua.is_windows() then
-            luacmake_build_targets:push("liblua")
-        end
-    elseif target ~= "olua" then
-        local package_name = olua.format("lua-${target}")
-        local package_git_dir = olua.format("${work_dir}/cache/${package_name}")
-        local manifest = olua.load_manifest("${work_dir}/package/${package_name}/manifest")
-        if not manifest then
-            olua.error("package '${target}' not found")
-        end
+        package_name = olua.format("lua${luacmake_lua_version}")
+        package_git_dir = olua.format("${work_dir}/package-builtin/${package_name}")
+        package_manifest = {target = "lua luac"}
+    else
+        package_name = olua.format("lua-${target}")
+        package_git_dir = olua.format("${work_dir}/cache/${package_name}/git")
+        package_manifest = olua.load_manifest("${work_dir}/package/${package_name}/manifest")
+    end
+    
+    if not package_manifest then
+        olua.error("package '${target}' not found")
+    end
+
+    build_dir = olua.format("build/${package_name}")
+    source_dir = olua.format("cache/${package_name}")
+
+    if target == "lua" then
+        olua.mkdir("${work_dir}/cache/${package_name}")
+    else
         if not olua.exist("${package_git_dir}/.git/config") then
-            olua.exec("git clone ${manifest.git} ${package_git_dir}")
-            if manifest.branch then
-                olua.exec("git -C ${package_git_dir} checkout ${manifest.branch}")
+            olua.exec("git clone ${package_manifest.git} ${package_git_dir}")
+            if package_manifest.branch then
+                olua.exec("git -C ${package_git_dir} checkout ${package_manifest.branch}")
             end
         else
-            if manifest.branch then
-                olua.exec("git -C ${package_git_dir} checkout ${manifest.branch}")
+            if package_manifest.branch then
+                olua.exec("git -C ${package_git_dir} checkout ${package_manifest.branch}")
             end
             olua.exec("git -C ${package_git_dir} pull")
         end
-        if manifest.commit then
-            olua.exec("git -C ${package_git_dir} checkout ${manifest.commit}")
+        if package_manifest.commit then
+            olua.exec("git -C ${package_git_dir} checkout ${package_manifest.commit}")
         end
         olua.exec("git -C ${package_git_dir} submodule init")
         olua.exec("git -C ${package_git_dir} submodule update")
-        luacmake_build_targets:push(manifest.target)
-        luacmake_build_packages:pushf([[
+    end
+
+    local CMakeLists = olua.newarray("\n")
+    CMakeLists:pushf([[
+        cmake_minimum_required(VERSION 3.25)
+
+        project(luacmake)
+
+        set(BUILD_SHARED_LIBS OFF)
+
+        if(APPLE)
+            set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64")
+        endif()
+    ]])
+    CMakeLists:push("")
+    CMakeLists:pushf([[
+        # lua
+        add_subdirectory(${work_dir}/package-builtin/lua${luacmake_lua_version} lua)
+        get_property(LUA_INCLUDE_DIR TARGET liblua PROPERTY INCLUDE_DIRECTORIES)
+
+        # olua
+        add_subdirectory(${work_dir}/package-builtin/olua olua)
+    ]])
+    if target ~= "lua" then
+        CMakeLists:pushf([[
+            # package
             set(LUACMAKE_SOURCE_DIR ${package_git_dir})
             add_subdirectory(${work_dir}/package/${package_name} ${package_name})
         ]])
+        CMakeLists:push("")
     end
+    CMakeLists:pushf([[
+        # install
+        install(
+          TARGETS
+            ${package_manifest.target}
+          DESTINATION
+            ${luacmake_output}
+          COMPONENT
+            luacmake
+        )
+    ]])
+    olua.write("${work_dir}/cache/${package_name}/CMakeLists.txt", tostring(CMakeLists))
+
+    if olua.is_windows() then
+        olua.exec([[
+            cmake -B ${build_dir} -S ${source_dir} -A win32
+            cmake --build ${build_dir} --target ${package_manifest.target} --config Release
+        ]])
+    else
+        olua.exec([[
+            cmake -B ${build_dir} -S ${source_dir} -DCMAKE_BUILD_TYPE=Release
+            cmake --build ${build_dir} --target ${package_manifest.target}
+        ]])
+    end
+    luacmake_install_targets:pushf("cmake --install ${build_dir} --component luacmake")
 end
 
--------------------------------------------------------------------------------
--- write build cmake file
--------------------------------------------------------------------------------
-local CMakeLists = olua.newarray("\n")
-CMakeLists:pushf([[
-    cmake_minimum_required(VERSION 3.25)
-
-    project(luacmake)
-
-    if(APPLE)
-        set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64")
-    endif()
-]])
-CMakeLists:push("")
-CMakeLists:pushf([[
-    # lua
-    add_subdirectory(${work_dir}/package-builtin/lua${luacmake_lua_version} lua)
-    get_property(LUA_INCLUDE_DIR TARGET liblua PROPERTY INCLUDE_DIRECTORIES)
-
-    # olua
-    add_subdirectory(${work_dir}/package-builtin/olua olua)
-
-    # package
-    ${luacmake_build_packages}
-
-    # install
-    install(
-      TARGETS
-        ${luacmake_build_targets}
-      DESTINATION
-        ${luacmake_output}
-      COMPONENT
-        luacmake
-    )
-]])
-olua.write("${work_dir}/cache/CMakeLists.txt", tostring(CMakeLists))
-if olua.is_windows() then
-    olua.exec("cmake -B build -S cache -A win32")
-    olua.exec("cmake --build build --target ${luacmake_build_targets} --config Release")
-else
-    olua.exec("cmake -B build -S cache -DCMAKE_BUILD_TYPE=Release")
-    olua.exec("cmake --build build --target ${luacmake_build_targets}")
-end
-olua.exec("cmake --install build --component luacmake")
+olua.exec("${luacmake_install_targets}")
