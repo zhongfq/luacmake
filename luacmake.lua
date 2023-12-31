@@ -23,6 +23,7 @@ end
 -- parsing args
 -------------------------------------------------------------------------------
 local luacmake_command
+local luacmake_jobs = ""
 local luacmake_packages = {}
 local luacmake_lua_version = "54"
 local luacmake_output = "output"
@@ -53,6 +54,9 @@ while #args > 0 do
         olua.rmdir("${work_dir}/cache")
         olua.rmdir("${work_dir}/output")
         return
+    elseif c == "-j" then
+        local n = assert(table.remove(args, 1), "no jobs")
+        luacmake_jobs = olua.format("-j ${n}")
     elseif not string.find(c, "^[%-]") and luacmake_command == "install" then
         luacmake_packages[#luacmake_packages + 1] = c
     else
@@ -128,11 +132,15 @@ for _, target in ipairs(luacmake_packages) do
 
     local CMakeLists = olua.newarray("\n")
     CMakeLists:pushf([[
-        cmake_minimum_required(VERSION 3.25)
+        cmake_minimum_required(VERSION 3.10)
 
         project(luacmake)
 
-        set(BUILD_SHARED_LIBS OFF)
+        if(CMAKE_SYSTEM_NAME MATCHES "Linux")
+            if(NOT LINUX)
+                set(LINUX TRUE)
+            endif()
+        endif()
 
         if(APPLE)
             set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64")
@@ -170,10 +178,10 @@ for _, target in ipairs(luacmake_packages) do
 
     if olua.is_windows() then
         olua.exec("cmake -B ${build_dir} -S ${source_dir} -A win32")
-        olua.exec("cmake --build ${build_dir} --target ${package_manifest.target} --config Release")
+        olua.exec("cmake --build ${build_dir} --target ${package_manifest.target} --config Release ${luacmake_jobs}")
     else
         olua.exec("cmake -B ${build_dir} -S ${source_dir} -DCMAKE_BUILD_TYPE=Release")
-        olua.exec("cmake --build ${build_dir} --target ${package_manifest.target}")
+        olua.exec("cmake --build ${build_dir} --target ${package_manifest.target} ${luacmake_jobs}")
     end
     luacmake_install_targets:pushf("cmake --install ${build_dir} --component luacmake")
 end

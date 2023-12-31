@@ -1,0 +1,4 @@
+return {
+    target = "luaclang",
+    git = "git@github.com:zhongfq/lua-clang.git",
+}
