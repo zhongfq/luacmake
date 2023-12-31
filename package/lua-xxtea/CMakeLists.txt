@@ -1,0 +1,19 @@
+cmake_minimum_required(VERSION 3.25)
+
+set(TARGET_NAME xxtea)
+
+set(TARGET_SOURCES
+    ${LUACMAKE_SOURCE_DIR}/src/lua_xxtea.c
+    ${LUACMAKE_SOURCE_DIR}/src/xxtea.c
+    ${LUACMAKE_SOURCE_DIR}/src/xxtea.h
+)
+
+add_library(${TARGET_NAME} MODULE ${TARGET_SOURCES})
+set_target_properties(${TARGET_NAME} PROPERTIES PREFIX "")
+target_include_directories(${TARGET_NAME} PUBLIC ${LUA_INCLUDE_DIR})
+
+if(APPLE)
+    target_link_options(${TARGET_NAME} PUBLIC -bundle -undefined dynamic_lookup)
+elseif(WIN32)
+    target_link_libraries(${TARGET_NAME} liblua)
+endif()

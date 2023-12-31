@@ -1,0 +1,4 @@
+return {
+    target = "xxtea",
+    git = "git@github.com:xxtea/xxtea-lua.git",
+}
