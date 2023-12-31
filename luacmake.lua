@@ -169,17 +169,16 @@ for _, target in ipairs(luacmake_packages) do
     olua.write("${work_dir}/cache/${package_name}/CMakeLists.txt", tostring(CMakeLists))
 
     if olua.is_windows() then
-        olua.exec([[
-            cmake -B ${build_dir} -S ${source_dir} -A win32
-            cmake --build ${build_dir} --target ${package_manifest.target} --config Release
-        ]])
+        olua.exec("cmake -B ${build_dir} -S ${source_dir} -A win32")
+        olua.exec("cmake --build ${build_dir} --target ${package_manifest.target} --config Release")
     else
-        olua.exec([[
-            cmake -B ${build_dir} -S ${source_dir} -DCMAKE_BUILD_TYPE=Release
-            cmake --build ${build_dir} --target ${package_manifest.target}
-        ]])
+        olua.exec("cmake -B ${build_dir} -S ${source_dir} -DCMAKE_BUILD_TYPE=Release")
+        olua.exec("cmake --build ${build_dir} --target ${package_manifest.target}")
     end
     luacmake_install_targets:pushf("cmake --install ${build_dir} --component luacmake")
 end
 
-olua.exec("${luacmake_install_targets}")
+for _, v in ipairs(luacmake_install_targets) do
+    olua.exec(v)
+end
+
