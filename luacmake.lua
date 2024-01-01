@@ -95,11 +95,12 @@ for _, target in ipairs(luacmake_packages) do
     if target == "lua" then
         package_name = olua.format("lua${luacmake_lua_version}")
         package_git_dir = olua.format("${work_dir}/package-builtin/${package_name}")
-        package_manifest = {target = "lua luac"}
+        package_manifest = {target = "lua luac", cmakeargs = ""}
     else
         package_name = olua.format("lua-${target}")
         package_git_dir = olua.format("${work_dir}/cache/${package_name}/git")
         package_manifest = olua.load_manifest("${work_dir}/package/${package_name}/manifest")
+        package_manifest.cmakeargs = package_manifest.cmakeargs or ""
     end
     
     if not package_manifest then
@@ -132,7 +133,7 @@ for _, target in ipairs(luacmake_packages) do
 
     local CMakeLists = olua.newarray("\n")
     CMakeLists:pushf([[
-        cmake_minimum_required(VERSION 3.10)
+        cmake_minimum_required(VERSION 3.20)
 
         project(luacmake)
 
@@ -177,10 +178,10 @@ for _, target in ipairs(luacmake_packages) do
     olua.write("${work_dir}/cache/${package_name}/CMakeLists.txt", tostring(CMakeLists))
 
     if olua.is_windows() then
-        olua.exec("cmake -B ${build_dir} -S ${source_dir} -A win32")
+        olua.exec("cmake -B ${build_dir} -S ${source_dir} -A win32 ${package_manifest.cmakeargs}")
         olua.exec("cmake --build ${build_dir} --target ${package_manifest.target} --config Release ${luacmake_jobs}")
     else
-        olua.exec("cmake -B ${build_dir} -S ${source_dir} -DCMAKE_BUILD_TYPE=Release")
+        olua.exec("cmake -B ${build_dir} -S ${source_dir} -DCMAKE_BUILD_TYPE=Release ${package_manifest.cmakeargs}")
         olua.exec("cmake --build ${build_dir} --target ${package_manifest.target} ${luacmake_jobs}")
     end
     luacmake_install_targets:pushf("cmake --install ${build_dir} --component luacmake")

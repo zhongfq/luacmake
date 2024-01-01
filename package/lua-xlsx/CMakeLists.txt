@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.20)
 
 set(BUILD_SHARED_LIBS OFF)
 set(CMAKE_CXX_STANDARD 11)
@@ -101,14 +101,10 @@ configure_file (
 
 # Zlib library needed
 add_subdirectory(${LUACMAKE_SOURCE_DIR}/zlib zlib)
-target_include_directories(zlib
-  PUBLIC
-    ${LUACMAKE_SOURCE_DIR}/zlib
-)
-target_include_directories(zlibstatic
-  PUBLIC
-    ${LUACMAKE_SOURCE_DIR}/zlib
-)
+target_include_directories(zlibstatic PUBLIC ${LUACMAKE_SOURCE_DIR}/zlib)
+if(LINUX)
+  target_compile_options(zlibstatic PRIVATE -fPIC)
+endif()
 
 if(UNIX)
     CHECK_COMPILER_FLAG(C "-Warray-bounds" HAS_WARRAY_BOUNDS)
