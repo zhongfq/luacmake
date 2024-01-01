@@ -1,0 +1,4 @@
+return {
+    target = "protobuf",
+    git = "git@github.com:luacmake/lua-pbc.git",
+}

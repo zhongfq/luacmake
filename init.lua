@@ -57,13 +57,27 @@ end
 -------------------------------------------------------------------------------
 -- io
 -------------------------------------------------------------------------------
+function olua.exist(path)
+    path = olua.format(path)
+    local ok, err, code = os.rename(path, path)
+    if not ok then
+       if code == 13 then
+          -- Permission denied, but it exists
+          return true
+       end
+    end
+    return ok, err
+end
+
 function olua.mkdir(dir)
     dir = olua.format(dir)
-    if olua.os == "windows" then
-        dir = string.gsub(dir, "/", "\\")
-        olua.exec("mkdir ${dir}")
-    else
-        olua.exec("mkdir -p ${dir}")
+    if not olua.exist("${dir}/") then
+        if olua.os == "windows" then
+            dir = string.gsub(dir, "/", "\\")
+            olua.exec("mkdir ${dir}")
+        else
+            olua.exec("mkdir -p ${dir}")
+        end
     end
 end
 
@@ -130,15 +144,6 @@ function olua.write(path, data)
     local f =  io.open(path, "w+b")
     f:write(data)
     f:close()
-end
-
-function olua.exist(path)
-    path = olua.format(path)
-    local f = io.open(path, 'r')
-    if f then
-        f:close()
-    end
-    return f ~= nil
 end
 
 -------------------------------------------------------------------------------
