@@ -146,6 +146,25 @@ function olua.write(path, data)
     f:close()
 end
 
+function olua.git_clone(git_dir, git, branch, commit)
+    if not olua.exist("${git_dir}/.git/config") then
+        olua.exec("git clone ${git} ${git_dir}")
+        if branch then
+            olua.exec("git -C ${git_dir} checkout ${branch}")
+        end
+    else
+        if branch then
+            olua.exec("git -C ${git_dir} checkout ${branch}")
+        end
+        olua.exec("git -C ${git_dir} pull")
+    end
+    if commit then
+        olua.exec("git -C ${git_dir} checkout ${commit}")
+    end
+    olua.exec("git -C ${git_dir} submodule init")
+    olua.exec("git -C ${git_dir} submodule update")
+end
+
 -------------------------------------------------------------------------------
 -- format args
 -------------------------------------------------------------------------------

@@ -113,22 +113,24 @@ for _, target in ipairs(luacmake_packages) do
     if target == "lua" then
         olua.mkdir("${work_dir}/cache/${package_name}")
     else
-        if not olua.exist("${package_git_dir}/.git/config") then
-            olua.exec("git clone ${package_manifest.git} ${package_git_dir}")
-            if package_manifest.branch then
-                olua.exec("git -C ${package_git_dir} checkout ${package_manifest.branch}")
-            end
-        else
-            if package_manifest.branch then
-                olua.exec("git -C ${package_git_dir} checkout ${package_manifest.branch}")
-            end
-            olua.exec("git -C ${package_git_dir} pull")
+        olua.git_clone(
+            package_git_dir,
+            package_manifest.git,
+            package_manifest.branch,
+            package_manifest.commit
+        )
+
+        -- checkout dependencies
+        for _, v in ipairs(package_manifest.dependencies or {}) do
+            local name = string.match(v.git, "([^/]+)%.git$")
+            local git_dir = olua.format("${package_git_dir}/${name}")
+            olua.git_clone(
+                git_dir,
+                v.git,
+                v.branch,
+                v.commit
+            )
         end
-        if package_manifest.commit then
-            olua.exec("git -C ${package_git_dir} checkout ${package_manifest.commit}")
-        end
-        olua.exec("git -C ${package_git_dir} submodule init")
-        olua.exec("git -C ${package_git_dir} submodule update")
     end
 
     local CMakeLists = olua.newarray("\n")
