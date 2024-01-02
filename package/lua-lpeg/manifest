@@ -1,0 +1,4 @@
+return {
+    target = "lpeg",
+    git = "git@github.com:roberto-ieru/LPeg.git",
+}
