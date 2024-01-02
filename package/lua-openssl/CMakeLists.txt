@@ -92,7 +92,7 @@ target_link_libraries(${LUACMAKE_TARGET}
 if(APPLE)
     target_link_options(${LUACMAKE_TARGET} PUBLIC -bundle -undefined dynamic_lookup)
 elseif(WIN32)
-    target_link_libraries(${LUACMAKE_TARGET} liblua)
+    target_link_libraries(${LUACMAKE_TARGET} PUBLIC liblua)
     target_compile_definitions(${LUACMAKE_TARGET}
       PRIVATE
         LUA_BUILD_AS_DLL
