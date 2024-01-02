@@ -5,6 +5,3 @@
 [submodule "lua54"]
 	path = lua54
 	url = https://github.com/luacmake/lua.git
-[submodule "olua"]
-	path = olua
-	url = https://github.com/zhongfq/olua.git

@@ -197,13 +197,17 @@ target_include_directories(zip PUBLIC ${LUA_INCLUDE_DIR})
 set(LUACMAKE_TARGET xlsx)
 set(LUACMAKE_SOURCES
    ${LUACMAKE_SOURCE_DIR}/lua-xlsx.cpp
+   ${LUACMAKE_SOURCE_DIR}/olua/olua.h
+   ${LUACMAKE_SOURCE_DIR}/olua/olua.hpp
+   ${LUACMAKE_SOURCE_DIR}/olua/olua.c
 )
 add_library(${LUACMAKE_TARGET} MODULE ${LUACMAKE_SOURCES})
-target_link_libraries(${LUACMAKE_TARGET} zip lxp olua)
+target_link_libraries(${LUACMAKE_TARGET} zip lxp)
 set_target_properties(${LUACMAKE_TARGET} PROPERTIES PREFIX "")
 target_include_directories(${LUACMAKE_TARGET}
   PUBLIC
     ${LUA_INCLUDE_DIR}
+    ${LUACMAKE_SOURCE_DIR}/olua
     ${LUACMAKE_SOURCE_DIR}/luaexpat/src
     ${LUACMAKE_SOURCE_DIR}/luazip/src
 )

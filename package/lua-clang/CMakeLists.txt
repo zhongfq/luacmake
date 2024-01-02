@@ -31,11 +31,11 @@ set_target_properties(${LUACMAKE_TARGET}
     PREFIX ""
     OUTPUT_NAME clang
 )
+target_link_libraries(luaclang libclang_static)
 target_include_directories(${LUACMAKE_TARGET}
   PUBLIC
     ${LUA_INCLUDE_DIR}
     ${LUACMAKE_SOURCE_DIR}
-    ${LUACMAKE_SOURCE_DIR}/lua54
     ${LUACMAKE_SOURCE_DIR}/llvm-project/clang/include
 )
 
@@ -50,5 +50,3 @@ elseif(WIN32)
     )
     set_target_properties(libclang_static PROPERTIES OUTPUT_NAME libclang_static)
 endif()
-
-target_link_libraries(luaclang libclang_static)

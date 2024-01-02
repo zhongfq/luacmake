@@ -154,9 +154,6 @@ for _, target in ipairs(luacmake_packages) do
         # lua
         add_subdirectory(${work_dir}/package-builtin/lua${luacmake_lua_version} lua)
         get_property(LUA_INCLUDE_DIR TARGET liblua PROPERTY INCLUDE_DIRECTORIES)
-
-        # olua
-        add_subdirectory(${work_dir}/package-builtin/olua olua)
     ]])
     if target ~= "lua" then
         CMakeLists:pushf([[
