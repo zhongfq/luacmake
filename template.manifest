@@ -5,7 +5,7 @@ return {
     branch = "master", -- optional
     commit = "ed0db2e29d94eaeb4267430c04abf8a930d8573e", -- optional
     dependencies = {
-        openssl = {
+        {
             git = "git@github.com:openssl/openssl.git",
             branch = "master", -- optional
             commit = "ed0db2e29d94eaeb4267430c04abf8a930d8573e", -- optional
