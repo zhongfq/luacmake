@@ -14,7 +14,7 @@ local function print_help()
         example:
           luacmake install cjson
           luacmake install cjson --lua 5.4|5.3
-          luacmake install cjson --install ./output
+          luacmake install cjson --output ./output
     ]])
 end
 
@@ -100,12 +100,13 @@ for _, target in ipairs(luacmake_packages) do
         package_name = olua.format("lua-${target}")
         package_git_dir = olua.format("${work_dir}/cache/${package_name}/git")
         package_manifest = olua.load_manifest("${work_dir}/package/${package_name}/manifest")
-        package_manifest.cmakeargs = package_manifest.cmakeargs or ""
     end
     
     if not package_manifest then
         olua.error("package '${target}' not found")
     end
+
+    package_manifest.cmakeargs = package_manifest.cmakeargs or ""
 
     build_dir = olua.format("build/${package_name}")
     source_dir = olua.format("cache/${package_name}")
