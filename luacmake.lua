@@ -71,10 +71,12 @@ if #luacmake_packages == 0 then
     return
 end
 
-if not string.find(luacmake_output, "^/") then
+if not (string.find(luacmake_output, "^/") or string.find(luacmake_output, "^%w+:")) then
     luacmake_output = olua.format("${work_dir}/${luacmake_output}")
 end
 olua.print("output dir: ${luacmake_output}")
+
+luacmake_output = string.gsub(luacmake_output, "\\", "/")
 
 -------------------------------------------------------------------------------
 -- update luacmake
