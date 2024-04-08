@@ -1,4 +1,4 @@
 return {
     target = "sproto",
-    git = "git@github.com:cloudwu/sproto.git",
+    git = "https://github.com/cloudwu/sproto.git",
 }

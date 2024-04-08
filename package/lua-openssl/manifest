@@ -1,13 +1,13 @@
 return {
     target = "lua-openssl",
-    git = "git@github.com:zhaozg/lua-openssl.git",
+    git = "https://github.com/zhaozg/lua-openssl.git",
     dependencies = {
         {
-            git = "git@github.com:openssl/openssl.git",
+            git = "https://github.com/openssl/openssl.git",
             branch = "OpenSSL_1_1_1d",
         },
         {
-            git = "git@github.com:luacmake/openssl-cmake.git",
+            git = "https://github.com/luacmake/openssl-cmake.git",
         }
     }
 }

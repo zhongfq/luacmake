@@ -1,4 +1,4 @@
 return {
     target = "xlsx",
-    git = "git@github.com:luacmake/lua-xlsx.git",
+    git = "https://github.com/luacmake/lua-xlsx.git",
 }

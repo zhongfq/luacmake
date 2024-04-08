@@ -1,6 +1,6 @@
 return {
     target = "cjson",
-    git = "git@github.com:cloudwu/lua-cjson.git",
+    git = "https://github.com/cloudwu/lua-cjson.git",
     branch = "master",
     commit = "ed0db2e29d94eaeb4267430c04abf8a930d8573e",
 }
