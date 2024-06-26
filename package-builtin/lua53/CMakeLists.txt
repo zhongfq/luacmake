@@ -81,7 +81,6 @@ else()
     endif()
 endif()
 
-set_target_properties(liblua PROPERTIES OUTPUT_NAME lua)
 target_include_directories(liblua PUBLIC ${LUA_SOURCE_DIR})
 
 add_executable(lua ${LUA_SOURCE_DIR}/lua.c)

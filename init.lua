@@ -4,6 +4,7 @@ function __TRACEBACK__(message)
     print(debug.traceback(message))
 end
 
+---@type 'windows'|'macos'|'linux'
 olua.os = package.cpath:find('?.dll') and 'windows' or
     ((io.popen('uname'):read("*l"):find('Darwin')) and 'macos' or 'linux')
 

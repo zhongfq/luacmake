@@ -11,6 +11,7 @@ local function print_help()
           clean         remove build and cache directory
           --lua         specify lua version
           --output      specify output path
+          --arch        specify architecture
         example:
           luacmake install cjson
           luacmake install cjson --lua 5.4|5.3
@@ -27,6 +28,7 @@ local luacmake_jobs = ""
 local luacmake_packages = {}
 local luacmake_lua_version = "54"
 local luacmake_output = "output"
+local luacmake_arch = ""
 
 local args = {...}
 while #args > 0 do
@@ -35,6 +37,8 @@ while #args > 0 do
         luacmake_command = c
         local target = assert(table.remove(args, 1), "no install target")
         luacmake_packages[#luacmake_packages + 1] = target
+    elseif c == "--arch" then
+        luacmake_arch = assert(table.remove(args, 1), "no architecture")
     elseif c == "--lua" then
         local version = assert(table.remove(args, 1), "no lua version")
         luacmake_command = c
@@ -136,7 +140,16 @@ for _, target in ipairs(luacmake_packages) do
         end
     end
 
+    if luacmake_arch == "" then
+        if olua.os == "windows" then
+            luacmake_arch = "x64"
+        elseif olua.os == "macos" then
+            luacmake_arch = "x86_64;arm64"
+        end
+    end
+
     local CMakeLists = olua.newarray("\n")
+    local lua_version = olua.format("lua${luacmake_lua_version}")
     CMakeLists:pushf([[
         cmake_minimum_required(VERSION 3.20)
 
@@ -149,15 +162,26 @@ for _, target in ipairs(luacmake_packages) do
         endif()
 
         if(APPLE)
-            set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64")
+            set(CMAKE_OSX_ARCHITECTURES "${luacmake_arch}")
         endif()
     ]])
     CMakeLists:push("")
     CMakeLists:pushf([[
         # lua
-        add_subdirectory(${work_dir}/package-builtin/lua${luacmake_lua_version} lua)
+        add_subdirectory(${work_dir}/package-builtin/${lua_version} lua)
         get_property(LUA_INCLUDE_DIR TARGET liblua PROPERTY INCLUDE_DIRECTORIES)
+        set_target_properties(liblua PROPERTIES
+            LIBRARY_OUTPUT_NAME liblua
+            RUNTIME_OUTPUT_NAME ${lua_version}
+        )
+        set_target_properties(lua PROPERTIES
+            OUTPUT_NAME ${lua_version}
+        )
+        set_target_properties(luac PROPERTIES
+            OUTPUT_NAME luac${luacmake_lua_version}
+        )
     ]])
+    local lua_targets = ""
     if target ~= "lua" then
         CMakeLists:pushf([[
             # package
@@ -165,12 +189,15 @@ for _, target in ipairs(luacmake_packages) do
             add_subdirectory(${work_dir}/package/${package_name} ${package_name})
         ]])
         CMakeLists:push("")
+    else
+        lua_targets = "lua luac liblua"
     end
     CMakeLists:pushf([[
         # install
         install(
           TARGETS
             ${package_manifest.target}
+            ${lua_targets}
           DESTINATION
             ${luacmake_output}
           COMPONENT
@@ -180,7 +207,7 @@ for _, target in ipairs(luacmake_packages) do
     olua.write("${work_dir}/cache/${package_name}/CMakeLists.txt", tostring(CMakeLists))
 
     if olua.is_windows() then
-        olua.exec("cmake -B ${build_dir} -S ${source_dir} -A win32 ${package_manifest.cmakeargs}")
+        olua.exec("cmake -B ${build_dir} -S ${source_dir} -A ${luacmake_arch} ${package_manifest.cmakeargs}")
         olua.exec("cmake --build ${build_dir} --target ${package_manifest.target} --config Release ${luacmake_jobs}")
     else
         olua.exec("cmake -B ${build_dir} -S ${source_dir} -DCMAKE_BUILD_TYPE=Release ${package_manifest.cmakeargs}")
