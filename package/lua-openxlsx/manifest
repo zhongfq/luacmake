@@ -1,0 +1,4 @@
+return {
+    target = "openxlsx",
+    git = "https://github.com/zhongfq/lua-openxlsx.git",
+}
