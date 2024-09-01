@@ -1,0 +1,4 @@
+return {
+    target = "libpugixml",
+    git = "https://github.com/zhongfq/lua-pugixml.git",
+}
