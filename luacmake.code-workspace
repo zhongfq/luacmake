@@ -6,7 +6,9 @@
 	],
 	"settings": {
 		"files.associations": {
+			"*.manifest": "lua",
 			"manifest": "lua"
-		}
+		},
+		"editor.formatOnSave": true
 	}
 }

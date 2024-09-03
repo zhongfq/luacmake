@@ -1,13 +1,13 @@
 return {
-    target = "cjson",
+    target = "openxlsx",
     cmakeargs = "",
-    git = "git@github.com:cloudwu/lua-cjson.git",
-    branch = "master", -- optional
+    git = "https://github.com/zhongfq/lua-openxlsx.git",
+    branch = "master",                                   -- optional
     commit = "ed0db2e29d94eaeb4267430c04abf8a930d8573e", -- optional
     dependencies = {
         {
             git = "git@github.com:openssl/openssl.git",
-            branch = "master", -- optional
+            branch = "master",                                   -- optional
             commit = "ed0db2e29d94eaeb4267430c04abf8a930d8573e", -- optional
         }
     }

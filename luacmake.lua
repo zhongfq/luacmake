@@ -31,7 +31,7 @@ local luacmake_lua_version = "54"
 local luacmake_output = "output"
 local luacmake_arch = ""
 
-local args = {...}
+local args = { ... }
 while #args > 0 do
     local c = table.remove(args, 1)
     if c == "install" then
@@ -100,14 +100,14 @@ for _, target in ipairs(luacmake_packages) do
     local package_name, package_git_dir, package_manifest, build_dir, source_dir
     if target == "lua" then
         package_name = olua.format("lua${luacmake_lua_version}")
-        package_git_dir = olua.format("${work_dir}/package-builtin/${package_name}")
-        package_manifest = {target = "lua luac", cmakeargs = ""}
+        package_git_dir = olua.format("${work_dir}/${package_name}")
+        package_manifest = { target = "lua luac", cmakeargs = "" }
     else
         package_name = olua.format("lua-${target}")
         package_git_dir = olua.format("${work_dir}/cache/${package_name}/git")
         package_manifest = olua.load_manifest("${work_dir}/package/${package_name}/manifest")
     end
-    
+
     if not package_manifest then
         olua.error("package '${target}' not found")
     end
@@ -171,7 +171,7 @@ for _, target in ipairs(luacmake_packages) do
     CMakeLists:push("")
     CMakeLists:pushf([[
         # lua
-        add_subdirectory(${work_dir}/package-builtin/${lua_version} lua)
+        add_subdirectory(${work_dir}/${lua_version} lua)
         get_property(LUA_INCLUDE_DIR TARGET liblua PROPERTY INCLUDE_DIRECTORIES)
         set_target_properties(liblua PROPERTIES
             LIBRARY_OUTPUT_NAME liblua
@@ -225,4 +225,3 @@ end
 for _, v in ipairs(luacmake_install_targets) do
     olua.exec(v)
 end
-
