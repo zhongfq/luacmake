@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.20)
 # llvm-project/llvm/CMakeLists.txt
 set(LLVM_ENABLE_PROJECTS "clang" CACHE STRING "")
 set(LLVM_TARGETS_TO_BUILD "" CACHE STRING "")
+set(LLVM_ENABLE_ZSTD "OFF" CACHE STRING "")
 
 # llvm-project/clang/tools/libclang/CMakeLists.txt
 set(LIBCLANG_BUILD_STATIC ON CACHE BOOL "")
@@ -14,39 +15,20 @@ endif()
 
 add_subdirectory(${LUACMAKE_SOURCE_DIR}/llvm-project/llvm llvm)
 
-set(LUACMAKE_TARGET luaclang)
+olua_add_library(luaclang
+  ${LUACMAKE_SOURCE_DIR}/src/lua_clang.h
+  ${LUACMAKE_SOURCE_DIR}/src/lua_clang.cpp
+  ${LUACMAKE_SOURCE_DIR}/src/clang_wrapper.h
+  ${LUACMAKE_SOURCE_DIR}/src/clang_wrapper.cpp
+  ${LUACMAKE_SOURCE_DIR}/olua/olua.h
+  ${LUACMAKE_SOURCE_DIR}/olua/olua.c
 
-set(LUACMAKE_SOURCES
-    ${LUACMAKE_SOURCE_DIR}/src/lua_clang.h
-    ${LUACMAKE_SOURCE_DIR}/src/lua_clang.cpp
-    ${LUACMAKE_SOURCE_DIR}/src/clang_wrapper.h
-    ${LUACMAKE_SOURCE_DIR}/src/clang_wrapper.cpp
-    ${LUACMAKE_SOURCE_DIR}/olua/olua.h
-    ${LUACMAKE_SOURCE_DIR}/olua/olua.c
-)
+  OUTPUT_NAME
+    clang
+  
+  LINK_LIBS
+    libclang_static
 
-add_library(${LUACMAKE_TARGET} MODULE ${LUACMAKE_SOURCES})
-set_target_properties(${LUACMAKE_TARGET}
-  PROPERTIES
-    PREFIX ""
-    OUTPUT_NAME clang
-)
-target_link_libraries(luaclang libclang_static)
-target_include_directories(${LUACMAKE_TARGET}
-  PUBLIC
-    ${LUA_INCLUDE_DIR}
-    ${LUACMAKE_SOURCE_DIR}
+  INCLUDE_DIRS
     ${LUACMAKE_SOURCE_DIR}/llvm-project/clang/include
 )
-
-if(APPLE)
-    target_link_options(${LUACMAKE_TARGET} PUBLIC -bundle -undefined dynamic_lookup)
-elseif(WIN32)
-    target_link_libraries(${LUACMAKE_TARGET} liblua)
-    target_compile_definitions(${LUACMAKE_TARGET}
-      PRIVATE
-        LUA_BUILD_AS_DLL
-        LUA_LIB
-    )
-    set_target_properties(libclang_static PROPERTIES OUTPUT_NAME libclang_static)
-endif()

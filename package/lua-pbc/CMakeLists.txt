@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
 
-set(LUACMAKE_TARGET protobuf)
 set(CMAKE_CXX_STANDARD 11)
 
 set(LUACMAKE_SOURCES
@@ -34,21 +33,9 @@ set(LUACMAKE_SOURCES
     lua-protobuf.cpp
 )
 
-add_library(${LUACMAKE_TARGET} MODULE ${LUACMAKE_SOURCES})
-set_target_properties(${LUACMAKE_TARGET} PROPERTIES PREFIX "")
-target_include_directories(${LUACMAKE_TARGET}
-  PUBLIC
-    ${LUA_INCLUDE_DIR}
+olua_add_library(protobuf
+  ${LUACMAKE_SOURCES}
+  
+  INCLUDE_DIRS
     ${LUACMAKE_SOURCE_DIR}/src
 )
-
-if(APPLE)
-    target_link_options(${LUACMAKE_TARGET} PUBLIC -bundle -undefined dynamic_lookup)
-elseif(WIN32)
-    target_link_libraries(${LUACMAKE_TARGET} liblua)
-    target_compile_definitions(${LUACMAKE_TARGET}
-      PRIVATE
-        LUA_BUILD_AS_DLL
-        LUA_LIB
-    )
-endif()

@@ -12,9 +12,10 @@ local function print_help()
           --lua         specify lua version
           --output      specify output path
           --arch        specify architecture
+          --parallel    specify parallel jobs
         example:
           luacmake install cjson
-          luacmake install cjson --lua 5.4|5.3
+          luacmake install cjson --lua 5.4
           luacmake install cjson --output ./output
     ]])
 end
@@ -91,7 +92,6 @@ olua.exec("git submodule update")
 -------------------------------------------------------------------------------
 -- checkout and build targets
 -------------------------------------------------------------------------------
-olua.rmdir("${work_dir}/build")
 olua.mkdir("${work_dir}/cache")
 
 local luacmake_install_targets = olua.newarray("\n")
@@ -112,7 +112,7 @@ for _, target in ipairs(luacmake_packages) do
         olua.error("package '${target}' not found")
     end
 
-    package_manifest.cmakeargs = package_manifest.cmakeargs or ""
+    package_manifest.cmakeargs = assert(package_manifest).cmakeargs or ""
 
     build_dir = olua.format("build/${package_name}")
     source_dir = olua.format("cache/${package_name}")
@@ -120,6 +120,7 @@ for _, target in ipairs(luacmake_packages) do
     if target == "lua" then
         olua.mkdir("${work_dir}/cache/${package_name}")
     else
+        assert(package_manifest)
         olua.git_clone(
             package_git_dir,
             package_manifest.git,
@@ -164,6 +165,8 @@ for _, target in ipairs(luacmake_packages) do
         if(APPLE)
             set(CMAKE_OSX_ARCHITECTURES "${luacmake_arch}")
         endif()
+
+        include(${work_dir}/tools/util.cmake)
     ]])
     CMakeLists:push("")
     CMakeLists:pushf([[
@@ -192,6 +195,9 @@ for _, target in ipairs(luacmake_packages) do
     else
         lua_targets = "lua luac liblua"
     end
+
+    olua.use(lua_targets, luacmake_jobs, lua_version)
+
     CMakeLists:pushf([[
         # install
         install(
@@ -208,7 +214,7 @@ for _, target in ipairs(luacmake_packages) do
 
     if olua.is_windows() then
         olua.exec("cmake -B ${build_dir} -S ${source_dir} -A ${luacmake_arch} ${package_manifest.cmakeargs}")
-        olua.exec("cmake --build ${build_dir} --target ${package_manifest.target} --config Release ${luacmake_jobs}")
+        olua.exec("cmake --build ${build_dir} --target ${package_manifest.target} --config Release")
     else
         olua.exec("cmake -B ${build_dir} -S ${source_dir} -DCMAKE_BUILD_TYPE=Release ${package_manifest.cmakeargs}")
         olua.exec("cmake --build ${build_dir} --target ${package_manifest.target} ${luacmake_jobs}")

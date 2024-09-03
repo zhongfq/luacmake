@@ -1,7 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
 
-set(LUACMAKE_TARGET lua-openssl)
-
 set(CMAKE_MACOSX_RPATH 1)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
     "${CMAKE_CURRENT_SOURCE_DIR}/cmake/Modules")
@@ -68,34 +66,19 @@ set(LUACMAKE_SOURCES
     ${LUACMAKE_SOURCE_DIR}/src/xstore.c
 )
 
-add_library(${LUACMAKE_TARGET} MODULE ${LUACMAKE_SOURCES})
-set_target_properties(${LUACMAKE_TARGET}
-  PROPERTIES
-    PREFIX ""
-    OUTPUT_NAME "openssl"
-)
-target_include_directories(${LUACMAKE_TARGET}
-  PUBLIC
-    ${LUA_INCLUDE_DIR}
-    ${LUACMAKE_SOURCE_DIR}/deps
-    ${LUACMAKE_SOURCE_DIR}/deps/lua-compat/c-api
-    ${LUACMAKE_SOURCE_DIR}/deps/auxiliar
-)
-target_link_libraries(${LUACMAKE_TARGET}
-  PUBLIC
+olua_add_library(lua-openssl
+  ${LUACMAKE_SOURCES}
+
+  OUTPUT_NAME "openssl"
+
+  LINK_LIBS
     ssl
     crypto
     ${EXTRA_LIBS}
     Threads::Threads
-)
 
-if(APPLE)
-    target_link_options(${LUACMAKE_TARGET} PUBLIC -bundle -undefined dynamic_lookup)
-elseif(WIN32)
-    target_link_libraries(${LUACMAKE_TARGET} PUBLIC liblua)
-    target_compile_definitions(${LUACMAKE_TARGET}
-      PRIVATE
-        LUA_BUILD_AS_DLL
-        LUA_LIB
-    )
-endif()
+  INCLUDE_DIRS
+    ${LUACMAKE_SOURCE_DIR}/deps
+    ${LUACMAKE_SOURCE_DIR}/deps/lua-compat/c-api
+    ${LUACMAKE_SOURCE_DIR}/deps/auxiliar
+)

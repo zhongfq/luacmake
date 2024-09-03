@@ -24,6 +24,9 @@ function pairs(t)
     return (mt and mt.__pairs or _pairs)(t)
 end
 
+function olua.use(...)
+end
+
 -------------------------------------------------------------------------------
 -- error
 -------------------------------------------------------------------------------
@@ -142,16 +145,17 @@ end
 
 function olua.write(path, data)
     path = olua.format(path)
-    local f =  io.open(path, "w+b")
+    local f =  assert(io.open(path, "w+b"), path)
     f:write(data)
     f:close()
 end
 
 function olua.git_clone(git_dir, git, branch, commit)
     if not olua.exist("${git_dir}/.git/config") then
-        olua.exec("git clone ${git} ${git_dir}")
         if branch then
-            olua.exec("git -C ${git_dir} checkout ${branch}")
+            olua.exec("git clone --branch ${branch} ${git} ${git_dir}")
+        else
+            olua.exec("git clone ${git} ${git_dir}")
         end
     else
         if branch then
