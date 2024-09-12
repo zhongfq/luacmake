@@ -1,0 +1,4 @@
+return {
+    target = "fs",
+    git = "https://github.com/zhongfq/lua-filesystem.git",
+}
